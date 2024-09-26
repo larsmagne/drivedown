@@ -1,0 +1,21 @@
+This requires Selenium for Node.  To install:
+
+npm install selenium-webdriver
+
+Usage
+
+node download.js URL-FILE.TXT
+
+where URL-FILE.TXT is a file where each line contains a NAME and and
+URL pair, like this:
+
+some-name https://drive.google.com/...
+
+The ~/Downloads/some-name/ directory will be filled with the pages.
+
+Alternatively, you can say
+
+node download.js NAME URL
+
+to download URL to ~/Downloads/NAME/.
+
