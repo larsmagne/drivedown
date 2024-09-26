@@ -68,6 +68,7 @@ async function saveImages(driver, doc) {
   while (fs.existsSync(dir))
     dir = homeDir + "/Downloads/" + doc + "(" + docNum++ + ")";
   fs.mkdirSync(dir);
+  console.log("Saving the pages to " + dir + "...");
   var images = await getImages(driver);;
   for (var i = 0; i<images.length; i++) {
     // We use the JS function from the getblob.js file.  It copies the
@@ -84,6 +85,7 @@ async function saveImages(driver, doc) {
       seq = "0" + seq;
     fs.writeFileSync(dir + "/page-" + seq + ".png", buff);
   }
+  console.log("Saving...done");
 }
 
 async function download() {
@@ -134,7 +136,7 @@ async function download() {
 	var nowHeight = parseInt(await largestElem.getAttribute("scrollHeight"));
 	var displayHeight = parseInt(await largestElem.getAttribute("clientHeight"));
 	if (scrolledTo + displayHeight + 500 >= nowHeight) {
-	  console.log("Bottom; saving");
+	  console.log("Got to the bottom");
 	  await saveImages(driver, doc);
 	  await driver.quit();
 	  break;
