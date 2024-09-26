@@ -1,9 +1,26 @@
 const {By, Builder, Browser} = require('selenium-webdriver');
 const assert = require("assert");
-var fs = require('fs');
+const fs = require('fs');
 const os = require('os');
 
-var homeDir = os.homedir();
+const homeDir = os.homedir();
+const imgUrl = "blob:https://drive.google.com/";
+const imgPreamble = "data:image/png;base64,";
+const getBlob = fs.readFileSync(__dirname + "/getblob.js", "utf8");
+
+if (!process.argv[3]) {
+  var urlFile = process.argv[2];
+  if (!urlFile || !fs.existsSync(urlFile)) {
+    console.log("Can't find the URL file\n");
+    process.exit();
+  }
+  var urls = [];
+  var urlLines = fs.readFileSync(urlFile, "utf8").split("\n");
+  for (var i = 0; i<urlLines.length; i++)
+    urls.push(urlLines[i].split(" "));
+} else {
+  var urls = [[process.argv[2], process.argv[3]]];
+}
 
 function sleep(ms) {
   return new Promise((resolve) => {
@@ -11,14 +28,10 @@ function sleep(ms) {
   });
 }
 
-const imgUrl = "blob:https://drive.google.com/";
-const imgPreamble = "data:image/png;base64,";
-var getBlob = fs.readFileSync(__dirname + '/getblob.js', 'utf8');
-
 // We find all images that have a src looks like "blob:https...".
 // These are the ones that contain the actual images.
 async function getImages(driver) {
-  var images = await driver.findElements(By.tagName('img'));
+  var images = await driver.findElements(By.tagName("img"));
   var found = [];
   for (var i = 0; i<images.length; i++) {
     var src = await images[i].getAttribute("src");
@@ -32,7 +45,7 @@ async function getImages(driver) {
 }
 
 async function saveImages(driver, doc) {
-  var dir = homeDir + '/Downloads/' + doc;
+  var dir = homeDir + "/Downloads/" + doc;
   if (!fs.existsSync(dir)){
     fs.mkdirSync(dir);
   }
@@ -46,7 +59,7 @@ async function saveImages(driver, doc) {
 			 images[i]);
     blob = blob.substring(imgPreamble.length);
     // Decode the base64.
-    let buff = Buffer.from(blob, 'base64');
+    var buff = Buffer.from(blob, "base64");
     var seq = "" + (i+1);
     while (seq.length < 3)
       seq = "0" + seq;
@@ -54,23 +67,7 @@ async function saveImages(driver, doc) {
   }
 }
 
-if (!process.argv[3]) {
-  var urlFile = process.argv[2];
-  if (!urlFile || !fs.existsSync(urlFile)) {
-    console.log("Can't find the URL file\n");
-    process.exit();
-  }
-  var urls = [];
-  var urlLines = fs.readFileSync(urlFile, 'utf8').split("\n");
-  for (var i = 0; i<urlLines.length; i++)
-    urls.push(urlLines[i].split(" "));
-} else {
-  var urls = [[process.argv[2], process.argv[3]]];
-}
-
-(async function download() {
-  let driver;
-
+async function download() {
   // The URL file is on the form ITEM-NAME URL.  We create directories
   // called ~/Download/ITEM-NAME/ and put all the pages from URL
   // there.
@@ -79,7 +76,7 @@ if (!process.argv[3]) {
     if (!url)
       continue;
     try {
-      driver = await new Builder().forBrowser(Browser.FIREFOX).build();
+      var driver = await new Builder().forBrowser(Browser.FIREFOX).build();
       await driver.get(url);
       // Wait until we get the first image before doing anything.
       var images = await getImages(driver);
@@ -94,7 +91,7 @@ if (!process.argv[3]) {
       // later to actually load all the pages.
       var largestHeight = 0;
       var largestElem = false;
-      var elems = await driver.findElements(By.tagName('div'));
+      var elems = await driver.findElements(By.tagName("div"));
       for (var i = 0; i<elems.length; i++) {
 	var height = 0;
 	try {
@@ -110,9 +107,9 @@ if (!process.argv[3]) {
       // and then save the pages.
       var scroll = 0;
       while (true) {
+	scroll += 450 + Math.floor(Math.random() * 100);
 	await driver.executeScript("arguments[0].scrollTo(0, arguments[1]);",
 				   largestElem, scroll);
-	scroll += 450 + Math.floor(Math.random() * 100);
 	var scrolledTo = parseInt(await largestElem.getAttribute("scrollTop"));
 	var nowHeight = parseInt(await largestElem.getAttribute("scrollHeight"));
 	var displayHeight = parseInt(await largestElem.getAttribute("clientHeight"));
@@ -122,13 +119,19 @@ if (!process.argv[3]) {
 	  await driver.quit();
 	  break;
 	}
+	console.log("Scrolled to " + scrolledTo + " out of " + nowHeight);
 	await sleep(350 + Math.floor(Math.random() * 100));
-	console.log("Scrolling to " + scrolledTo);
       }
     } catch (e) {
+      // We had an error while fetching.
+      console.log("Error while fetching " + url);
       console.log(e);
-    } finally {
-      //await driver.quit();
+      try {
+	await driver.quit();
+      } catch(e) {}
     }
+    await sleep(4000);
   }
-}())
+}
+
+download();
