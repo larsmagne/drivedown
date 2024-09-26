@@ -54,10 +54,18 @@ async function saveImages(driver, doc) {
   }
 }
 
-var urlFile = process.argv[2];
-if (!urlFile || !fs.existsSync(urlFile)) {
-  console.log("Can't find the URL file\n");
-  process.exit();
+if (!process.argv[3]) {
+  var urlFile = process.argv[2];
+  if (!urlFile || !fs.existsSync(urlFile)) {
+    console.log("Can't find the URL file\n");
+    process.exit();
+  }
+  var urls = [];
+  var urlLines = fs.readFileSync(urlFile, 'utf8').split("\n");
+  for (var i = 0; i<urlLines.length; i++)
+    urls.push(urlLines[i].split(" "));
+} else {
+  var urls = [[process.argv[2], process.argv[3]]];
 }
 
 (async function download() {
@@ -66,9 +74,8 @@ if (!urlFile || !fs.existsSync(urlFile)) {
   // The URL file is on the form ITEM-NAME URL.  We create directories
   // called ~/Download/ITEM-NAME/ and put all the pages from URL
   // there.
-  var urls = fs.readFileSync(urlFile, 'utf8').split("\n");
   for (var nurl = 0; nurl < urls.length; nurl++) {
-    var [doc, url] = urls[nurl].split(" ");
+    var [doc, url] = urls[nurl];
     if (!url)
       continue;
     try {
@@ -115,13 +122,13 @@ if (!urlFile || !fs.existsSync(urlFile)) {
 	  await driver.quit();
 	  break;
 	}
-	await sleep(400);
+	await sleep(350 + Math.floor(Math.random() * 100));
 	console.log("Scrolling to " + scrolledTo);
       }
     } catch (e) {
       console.log(e);
     } finally {
-      await driver.quit();
+      //await driver.quit();
     }
   }
 }())
