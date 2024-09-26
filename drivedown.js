@@ -8,18 +8,33 @@ const imgUrl = "blob:https://drive.google.com/";
 const imgPreamble = "data:image/png;base64,";
 const getBlob = fs.readFileSync(__dirname + "/getblob.js", "utf8");
 
-if (!process.argv[3]) {
-  var urlFile = process.argv[2];
+var target = process.argv[2];
+if (!target) {
+  console.log("Usage: node drivedown.js URL/URL-FILE");
+  process.exit();
+}
+
+if (!target.match(/^https:/)) {
+  // We have an URL file.
+  var urlFile = target;
   if (!urlFile || !fs.existsSync(urlFile)) {
     console.log("Can't find the URL file\n");
     process.exit();
   }
   var urls = [];
   var urlLines = fs.readFileSync(urlFile, "utf8").split("\n");
-  for (var i = 0; i<urlLines.length; i++)
-    urls.push(urlLines[i].split(" "));
+  for (var i = 0; i<urlLines.length; i++) {
+    // The URL file may or may not contain a document name as the
+    // first element.
+    var [doc, url] = urlLines[i].split(" ");
+    if (!url)
+      urls.push([false, doc]);
+    else
+      urls.push([doc, url]);
+  }
 } else {
-  var urls = [[process.argv[2], process.argv[3]]];
+  // We have a direct URL.
+  var urls = [[process.argv[3], target]];
 }
 
 function sleep(ms) {
@@ -45,21 +60,25 @@ async function getImages(driver) {
 }
 
 async function saveImages(driver, doc) {
+  // Use a default name if not given one.
+  if (!doc)
+    doc = "drivedown";
   var dir = homeDir + "/Downloads/" + doc;
-  if (!fs.existsSync(dir)){
-    fs.mkdirSync(dir);
-  }
+  var docNum = 1;
+  while (fs.existsSync(dir))
+    dir = homeDir + "/Downloads/" + doc + "(" + docNum++ + ")";
+  fs.mkdirSync(dir);
   var images = await getImages(driver);;
   for (var i = 0; i<images.length; i++) {
-    var blob = await
     // We use the JS function from the getblob.js file.  It copies the
     // image over to a canvas, and then returns the image as a base64
     // data: URL.
+    var blob = await
     driver.executeScript(getBlob + "\n return getBlob(arguments[0]);",
 			 images[i]);
-    blob = blob.substring(imgPreamble.length);
     // Decode the base64.
-    var buff = Buffer.from(blob, "base64");
+    var buff = Buffer.from(blob.substring(imgPreamble.length), "base64");
+    // Pad so that we get names like "page-004.png".
     var seq = "" + (i+1);
     while (seq.length < 3)
       seq = "0" + seq;
