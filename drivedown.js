@@ -126,6 +126,7 @@ async function download() {
       // and then save the pages.
       var scroll = 0;
       while (true) {
+	// The randoms here are just to avoid being too machine like.
 	scroll += 450 + Math.floor(Math.random() * 100);
 	await driver.executeScript("arguments[0].scrollTo(0, arguments[1]);",
 				   largestElem, scroll);

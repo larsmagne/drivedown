@@ -2,20 +2,26 @@ This requires Selenium for Node.  To install:
 
 npm install selenium-webdriver
 
+You also need Firefox installed.  If you have Chrome instead, change
+"Browser.FIREFOX" to "Browser.GOOGLE" in drivedown.js, but this
+package has not been tested with Chrome much.
+
 Usage
 
-node download.js URL-FILE.TXT
+node drivedown.js URL-FILE.TXT
 
 where URL-FILE.TXT is a file where each line contains a NAME and and
 URL pair, like this:
 
 some-name https://drive.google.com/...
 
+The file can also just be a list of URLs -- in that case, all the
+directories will be called ~/Downloads/drivedown(1), ...(2), etc.
+
 The ~/Downloads/some-name/ directory will be filled with the pages.
 
 Alternatively, you can say
 
-node download.js NAME URL
+node drivedown.js URL [NAME]
 
 to download URL to ~/Downloads/NAME/.
-
