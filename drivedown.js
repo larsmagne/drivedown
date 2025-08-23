@@ -59,15 +59,23 @@ async function getImages(driver) {
   return found;
 }
 
-async function saveImages(driver, doc) {
+function docDirName(doc, unique) {
   // Use a default name if not given one.
   if (!doc)
     doc = "drivedown";
   var dir = homeDir + "/Downloads/" + doc;
-  var docNum = 1;
-  while (fs.existsSync(dir))
-    dir = homeDir + "/Downloads/" + doc + "(" + docNum++ + ")";
-  fs.mkdirSync(dir);
+  if (unique) {
+    var docNum = 1;
+    while (fs.existsSync(dir))
+      dir = homeDir + "/Downloads/" + doc + "(" + docNum++ + ")";
+  }
+  if (!fs.existsSync(dir))
+    fs.mkdirSync(dir);
+  return dir;
+}
+
+async function saveImages(driver, doc) {
+  var dir = docDirName(doc, true);
   console.log("Saving the pages to " + dir + "...");
   var images = await getImages(driver);;
   for (var i = 0; i<images.length; i++) {
@@ -95,6 +103,9 @@ async function download() {
   for (var nurl = 0; nurl < urls.length; nurl++) {
     var [doc, url] = urls[nurl];
     if (!url)
+      continue;
+    // Skip if we've already downloaded this.
+    if (fs.existsSync(docDirName(doc, false)))
       continue;
     try {
       var driver = await new Builder().forBrowser(Browser.FIREFOX).build();
