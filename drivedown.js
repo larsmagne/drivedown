@@ -69,13 +69,12 @@ function docDirName(doc, unique) {
     while (fs.existsSync(dir))
       dir = homeDir + "/Downloads/" + doc + "(" + docNum++ + ")";
   }
-  if (!fs.existsSync(dir))
-    fs.mkdirSync(dir);
   return dir;
 }
 
 async function saveImages(driver, doc) {
   var dir = docDirName(doc, true);
+  fs.mkdirSync(dir);
   console.log("Saving the pages to " + dir + "...");
   var images = await getImages(driver);;
   for (var i = 0; i<images.length; i++) {
