@@ -106,6 +106,8 @@ async function download() {
     // Skip if we've already downloaded this.
     if (fs.existsSync(docDirName(doc, false)))
       continue;
+
+    console.log("Downloading " + url);
     try {
       var driver = await new Builder().forBrowser(Browser.FIREFOX).build();
       await driver.get(url);
