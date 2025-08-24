@@ -63,11 +63,11 @@ function docDirName(doc, unique) {
   // Use a default name if not given one.
   if (!doc)
     doc = "drivedown";
-  var dir = homeDir + "/Downloads/" + doc;
+  var dir = homeDir + "/Downloads/drivedown/" + doc;
   if (unique) {
     var docNum = 1;
     while (fs.existsSync(dir))
-      dir = homeDir + "/Downloads/" + doc + "(" + docNum++ + ")";
+      dir = homeDir + "/Downloads/drivedown/" + doc + "(" + docNum++ + ")";
   }
   return dir;
 }
